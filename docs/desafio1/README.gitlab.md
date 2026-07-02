@@ -2,15 +2,12 @@
 
 ## 🎯 Objetivo
 
-Criar uma pipeline de **Integração Contínua (CI)** e **Deploy Contínuo (CD)** para a **Landing Page** do CondoCombat, um site estático construído com [Astro](https://astro.build) + [TailwindCSS](https://tailwindcss.com).
+Criar uma pipeline de **Integração Contínua (CI)** e **Deploy Contínuo (CD)** para a **Landing Page** do CondoCombat (Astro + TailwindCSS) usando **GitLab CI/CD**.
 
 A pipeline deve:
-
-1. **Executar testes automatizados** (`vitest`)
-2. **Fazer o build do projeto** (`astro build`)
-3. **Fazer o deploy na Netlify** utilizando a **CLI oficial** da Netlify com token
-
-Pipeline configurada para **GitLab CI/CD**.
+1. Executar testes automatizados (`vitest`)
+2. Fazer o build do projeto (`astro build`)
+3. Fazer o deploy na Netlify via **CLI oficial** com token
 
 ---
 
@@ -18,14 +15,14 @@ Pipeline configurada para **GitLab CI/CD**.
 
 ### Landing Page (`landing/`)
 
-| Item            | Detalhe                        |
-|-----------------|--------------------------------|
-| Framework       | Astro 5 + TailwindCSS 3        |
-| Pasta de build  | `dist/`                        |
-| Testes          | Vitest                         |
-| Comando build   | `npm run build` → `astro build`|
-| Comando teste   | `npm test` → `vitest run`      |
-| Porta dev       | `localhost:4321`               |
+| Item | Detalhe |
+|------|---------|
+| Framework | Astro 5 + TailwindCSS 3 |
+| Pasta de build | `dist/` |
+| Testes | Vitest |
+| Comando build | `npm run build` → `astro build` |
+| Comando teste | `npm test` → `vitest run` |
+| Porta dev | `localhost:4321` |
 
 ```bash
 # Instalar dependências
@@ -43,50 +40,22 @@ npm run preview
 
 ---
 
-## 📋 Pré-requisitos
+## ✅ Passo a Passo
+
+### Passo 1 — Pré-requisitos
 
 - [ ] Conta na [Netlify](https://app.netlify.com/signup)
 - [ ] Repositório no [GitLab](https://gitlab.com)
 - [ ] Netlify CLI instalada (opcional, para testes locais):
-
-```bash
-npm install -g netlify-cli
-```
-
----
-
-## 🔐 Variáveis de Ambiente (Secrets)
-
-A pipeline precisa de duas variáveis de ambiente para fazer o deploy. Configure-as como **variáveis** no repositório:
-
-| Variável              | Descrição                                      | Onde conseguir                                  |
-|-----------------------|------------------------------------------------|-------------------------------------------------|
-| `NETLIFY_AUTH_TOKEN`  | Token de autenticação da Netlify    | Netlify → User Settings → Personal access tokens |
-| `NETLIFY_SITE_ID`     | ID do site criado na Netlify                   | Netlify → Site settings → General → Site ID      |
-| `NETLIFY_SITE_NAME`   | Nome do site (slug) — usado no deploy via CLI  | Netlify → Site settings → General → Site name    |
-
-### Como gerar o `NETLIFY_AUTH_TOKEN`
-
-1. Acesse [app.netlify.com](https://app.netlify.com)
-2. Vá em **User Settings** (foto do canto superior direito) → **Applications**
-3. Em **Personal access tokens**, clique em **New access token**
-4. Dê um nome (ex: `ci-cd-condocombat`) e copie o token gerado
-5. Adicione como secret no repositório com o nome `NETLIFY_AUTH_TOKEN`
-
-### Como obter o `NETLIFY_SITE_ID`
-
-1. No Netlify, vá em **Sites** → selecione o site criado
-2. Vá em **Site settings** → **General** → **Site details**
-3. Copie o **Site ID** (é um UUID, ex: `12345678-9abc-def0-1234-56789abcdef0`)
-4. Adicione como secret no repositório com o nome `NETLIFY_SITE_ID`
-
-> 💡 **Dica**: Você pode criar o site manualmente pelo dashboard da Netlify ou via CLI com `netlify sites:create`.
+  ```bash
+  npm install -g netlify-cli
+  ```
 
 ---
 
-## 🌐 Configuração `netlify.toml`
+### Passo 2 — Criar arquivo `netlify.toml`
 
-Crie o arquivo `netlify.toml` na raiz da landing page (`landing/netlify.toml`):
+Crie `landing/netlify.toml` na raiz da landing page:
 
 ```toml
 [build]
@@ -102,33 +71,40 @@ Crie o arquivo `netlify.toml` na raiz da landing page (`landing/netlify.toml`):
   status = 200
 ```
 
-> ℹ️ Este arquivo informa à Netlify qual comando executar e qual pasta publicar. Ele é opcional, mas ajuda na consistência entre deploys locais e via pipeline.
+> ℹ️ Informa à Netlify qual comando executar e qual pasta publicar. Ajuda na consistência entre deploys locais e via pipeline.
 
 ---
 
-## 🚀 Deploy com Netlify CLI
+### Passo 3 — Configurar Variáveis no GitLab
 
-O deploy é feito com a `netlify-cli` dentro da pipeline:
+Vá em **Settings → CI/CD → Variables** e adicione:
 
-```bash
-npm install -g netlify-cli
-netlify deploy --dir=dist --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
-```
+| Variável | Descrição | Onde conseguir | Masked |
+|----------|-----------|----------------|--------|
+| `NETLIFY_AUTH_TOKEN` | Token de autenticação da Netlify | Netlify → User Settings → Applications → Personal access tokens | ✅ Sim |
+| `NETLIFY_SITE_ID` | ID do site na Netlify (UUID) | Netlify → Sites → Site settings → General → Site details → Site ID | ✅ Sim |
+| `NETLIFY_SITE_NAME` | Nome do site (slug) | Netlify → Site settings → General → Site name | ❌ Não |
 
-| Flag      | Significado                                        |
-|-----------|----------------------------------------------------|
-| `--dir`   | Diretório com os arquivos do build (`dist`)        |
-| `--prod`  | Deploy direto para produção (sem draft)            |
-| `--auth`  | Token de autenticação                              |
-| `--site`  | ID do site na Netlify                              |
+**Como gerar `NETLIFY_AUTH_TOKEN`:**
+1. Acesse [app.netlify.com](https://app.netlify.com)
+2. User Settings (foto canto superior) → Applications
+3. Personal access tokens → New access token
+4. Nome: `ci-cd-condocombat` → copie o token
+5. Adicione como variável `NETLIFY_AUTH_TOKEN` (marque **Masked**)
+
+**Como obter `NETLIFY_SITE_ID`:**
+1. No Netlify, vá em Sites → selecione o site
+2. Site settings → General → Site details
+3. Copie o **Site ID** (ex: `12345678-9abc-def0-1234-56789abcdef0`)
+4. Adicione como variável `NETLIFY_SITE_ID` (marque **Masked**)
+
+> 💡 Pode criar o site manualmente pelo dashboard ou via CLI: `netlify sites:create`
 
 ---
 
-## 🦊 GitLab CI/CD
+### Passo 4 — Criar Pipeline `.gitlab-ci.yml`
 
 Crie o arquivo `.gitlab-ci.yml` na **raiz do repositório**:
-
-### `.gitlab-ci.yml`
 
 ```yaml
 image: node:20
@@ -188,33 +164,22 @@ deploy-landing:
     url: https://$NETLIFY_SITE_NAME.netlify.app
 ```
 
-### Explicação dos stages
+**Explicação dos stages:**
 
-| Stage     | Descrição                                     |
-|-----------|-----------------------------------------------|
-| `test`    | Instala deps e executa os testes do Vitest    |
-| `build`   | Faz o build com `astro build` → gera `dist/`  |
-| `deploy`  | Instala Netlify CLI e faz deploy para produção |
+| Stage | Descrição |
+|-------|-----------|
+| `test` | Instala deps e executa os testes do Vitest |
+| `build` | Faz o build com `astro build` → gera `dist/` |
+| `deploy` | Instala Netlify CLI e faz deploy para produção |
 
-O `needs` garante a ordem: test → build → deploy.
+O `needs` garante a ordem: **test → build → deploy**.
 
-### Configuração de Environment no GitLab
-
-Para adicionar variáveis no GitLab:
-
-1. Vá em **Settings** → **CI/CD** → **Variables**
-2. Adicione:
-   - `NETLIFY_AUTH_TOKEN` — marcada como **Masked**
-   - `NETLIFY_SITE_ID` — marcada como **Masked**
-   - `NETLIFY_SITE_NAME` — nome do seu site (ex: `condocombat-landing`)
-
-> 💡 **Dica**: Use o `environment.url` com `https://$NETLIFY_SITE_NAME.netlify.app` para que o GitLab mostre um link direto para o site nos pipelines.
+**Configuração de Environment:**
+- O `environment.url` com `https://$NETLIFY_SITE_NAME.netlify.app` faz o GitLab mostrar link direto para o site nos pipelines.
 
 ---
 
-## 🧪 Validação local antes de subir
-
-Antes de commitar, teste tudo localmente:
+### Passo 5 — Validar Localmente Antes de Subir
 
 ```bash
 # 1. Testes
@@ -232,15 +197,53 @@ netlify deploy --dir=dist --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE
 
 ---
 
+### Passo 6 — Commit e Push
+
+```bash
+git add .
+git commit -m "feat: add CI/CD pipeline for landing page"
+git push origin main
+```
+
+A pipeline será disparada automaticamente. Acompanhe em **CI/CD → Pipelines** no GitLab.
+
+---
+
+### Passo 7 — Verificar Deploy
+
+Após a pipeline concluir:
+1. Acesse a URL do site: `https://{site-name}.netlify.app`
+2. Confirme que a landing page carrega corretamente
+3. No GitLab, o pipeline mostrará um botão "Visit site" graças ao `environment.url`
+4. Configure domínio personalizado depois, se desejar (Netlify → Domain settings)
+
+---
+
 ## ✅ Critérios de Avaliação
 
-| Critério                           | Peso | Descrição                                          |
-|------------------------------------|------|----------------------------------------------------|
-| Testes passando na pipeline        | 25%  | `vitest run` executa sem erros                     |
-| Build concluído com sucesso        | 20%  | `astro build` gera a pasta `dist/`                 |
-| Deploy publicado na Netlify        | 30%  | Site acessível via URL pública                     |
-| Pipeline automatizada (CI/CD)      | 15%  | Pipeline roda sozinha no push para `main`          |
-| Organização e clareza do código    | 10%  | YAML limpo, boas práticas, secrets bem configurados|
+| Critério | Peso | Descrição |
+|----------|------|-----------|
+| Testes passando na pipeline | 25% | `vitest run` executa sem erros |
+| Build concluído com sucesso | 20% | `astro build` gera a pasta `dist/` |
+| Deploy publicado na Netlify | 30% | Site acessível via URL pública |
+| Pipeline automatizada (CI/CD) | 15% | Pipeline roda sozinha no push para `main` |
+| Organização e clareza do código | 10% | YAML limpo, boas práticas, variáveis bem configuradas |
+
+---
+
+## 💡 Dicas Importantes
+
+1. **Monorepo**: O CondoCombat tem `landing/`, `frontend/`, `backend/`. Use `only:changes` no GitLab CI/CD para focar apenas na landing:
+   ```yaml
+   only:
+     changes:
+       - landing/**/*
+       - .gitlab-ci.yml
+   ```
+2. **Netlify CLI**: Instale como dev dependency (`npm install -D netlify-cli`) para versão fixa no `package.json`.
+3. **Teste em draft primeiro**: Faça deploy sem `--prod` para verificar antes de publicar.
+4. **Logs**: Se falhar, verifique logs da pipeline (GitLab CI/CD) e da Netlify (Deploys → clicar no deploy com problema).
+5. **URL do site**: Após deploy, disponível em `https://{site-name}.netlify.app`.
 
 ---
 
@@ -250,13 +253,3 @@ netlify deploy --dir=dist --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE
 - [GitLab CI/CD — Documentação](https://docs.gitlab.com/ee/ci/)
 - [Astro — Guia de deploy na Netlify](https://docs.astro.build/en/guides/deploy/netlify/)
 - [CondoCombat — Landing Page](../../landing/)
-
----
-
-## 💡 Dicas
-
-1. **Monorepo**: O projeto CondoCombat é um monorepo com `landing/`, `frontend/` e `backend/`. A pipeline deve focar **apenas** na landing page. Use `only:changes` no GitLab CI/CD para evitar execuções desnecessárias.
-2. **Netlify CLI**: Instale como dependência de desenvolvimento (`npm install -D netlify-cli`) para ter versão fixa no `package.json`.
-3. **URL do site**: Após o deploy, o site estará disponível em `https://{site-name}.netlify.app`. Você pode configurar domínio personalizado depois.
-4. **Teste em draft primeiro**: Faça o primeiro deploy sem `--prod` para verificar se está tudo certo antes de publicar.
-5. **Logs**: Se o deploy falhar, verifique os logs da pipeline e da Netlify (Netlify → Deploys → clicar no deploy com problema).

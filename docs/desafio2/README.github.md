@@ -6,8 +6,8 @@ Criar **Dockerfiles** e um **docker-compose.yml** para o backend (FastAPI) e fro
 
 As pipelines devem:
 
-1. **Pipeline do Backend**: Executar lint (Ruff) → testes (pytest) → build Docker → push DockerHub
-2. **Pipeline do Frontend**: Executar lint (ESLint) → testes (Vitest) → build Docker → push DockerHub
+1. **Pipeline do Backend** (`.github/workflows/backend.yml`): Executar lint (Ruff) → testes (pytest) → build Docker → push DockerHub
+2. **Pipeline do Frontend** (`.github/workflows/frontend.yml`): Executar lint (ESLint) → testes (Vitest) → build Docker → push DockerHub
 3. **Rodar localmente** com Docker Compose usando as imagens publicadas
 
 Pipelines configuradas como **arquivos separados** no GitHub Actions.
@@ -20,73 +20,43 @@ Pipelines configuradas como **arquivos separados** no GitHub Actions.
 
 | Item | Detalhe |
 |------|---------|
-| **Framework** | FastAPI 0.115+ com SQLAlchemy Async |
-| **Linter** | Ruff (`ruff check app/`) |
-| **Testes** | pytest (`pytest`) |
-| **Porta** | 8000 (uvicorn) |
-| **Banco** | PostgreSQL 16 + Alembic |
-| **Entrypoint** | `backend/app/main.py` |
-| **Dependências** | `backend/requirements.txt` |
+| Framework | FastAPI 0.115+ com SQLAlchemy Async |
+| Linter | Ruff (`ruff check app/`) |
+| Testes | pytest (`pytest`) |
+| Porta | 8000 (uvicorn) |
+| Banco | PostgreSQL 16 + Alembic |
+| Entrypoint | `backend/app/main.py` |
+| Dependências | `backend/requirements.txt` |
 
 ### Frontend (Next.js)
 
 | Item | Detalhe |
 |------|---------|
-| **Framework** | Next.js 14 App Router + shadcn/ui |
-| **Linter** | ESLint (`npm run lint`) |
-| **Testes** | Vitest (`npm run test`) |
-| **Porta** | 3000 (Next.js dev) |
-| **Build** | `npm run build` |
-| **Entrypoint** | `frontend/next.config.js` |
-| **Dependências** | `frontend/package.json` |
+| Framework | Next.js 14 App Router + shadcn/ui |
+| Linter | ESLint (`npm run lint`) |
+| Testes | Vitest (`npm run test`) |
+| Porta | 3000 (Next.js dev) |
+| Build | `npm run build` |
+| Entrypoint | `frontend/next.config.js` |
+| Dependências | `frontend/package.json` |
 
 ---
 
-## 📋 Pré-requisitos
+## ✅ Passo a Passo
 
-1. **Conta no DockerHub**
-   - Crie em [hub.docker.com](https://hub.docker.com/)
-   - Crie um Access Token em Account Settings → Security
+### Passo 1 — Pré-requisitos
 
-2. **Conta no GitHub**
-   - Repositório do CondoCombat forkado ou clonado
-
-3. **Docker instalado localmente**
-   - Para testar os Dockerfiles
-   - Para rodar o docker-compose
-
-4. **Permissões de escrita** no repositório GitHub
+- [ ] Conta no [Docker Hub](https://hub.docker.com/signup)
+- [ ] Repositório no [GitHub](https://github.com)
+- [ ] Docker instalado localmente
+- [ ] `docker-compose` instalado (v2+)
+- [ ] Python 3.12+ e Node.js 20+ (para testes locais)
 
 ---
 
-## 🔐 Variáveis de Ambiente (Secrets)
+### Passo 2 — Criar Dockerfile do Backend
 
-Configure estes secrets no repositório GitHub (Settings → Secrets and variables → Actions):
-
-| Secret | Valor | Descrição |
-|--------|-------|-----------|
-| `DOCKERHUB_USERNAME` | Seu usuário DockerHub | Username para login |
-| `DOCKERHUB_TOKEN` | Access Token do DockerHub | Token em vez de senha |
-| `SECRET_KEY` | Chave JWT de 32 caracteres | Backend valida na inicialização |
-
-**Como gerar a SECRET_KEY**:
-```bash
-python -c 'import secrets; print(secrets.token_urlsafe(32))'
-```
-
----
-
-## 🏗️ Criando o Dockerfile do Backend
-
-Crie o arquivo `backend/Dockerfile` com **multi-stage build** em 3 estágios:
-
-### Etapas
-
-1. **Stage 1 (deps)**: Instala dependências Python
-2. **Stage 2 (builder)**: Copia código fonte
-3. **Stage 3 (runner)**: Imagem final com usuário não-root
-
-### `backend/Dockerfile`
+Crie `backend/Dockerfile` com **multi-stage build** (2 estágios):
 
 ```dockerfile
 # =============================================================================
@@ -146,7 +116,11 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 ENTRYPOINT ["./entrypoint.sh"]
 ```
 
-### `backend/entrypoint.sh`
+---
+
+### Passo 3 — Criar Entrypoint do Backend
+
+Crie `backend/entrypoint.sh`:
 
 ```bash
 #!/bin/bash
@@ -166,19 +140,13 @@ echo "🚀 Iniciando servidor FastAPI..."
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+> ⚠️ **Importante**: Dê permissão de execução: `chmod +x backend/entrypoint.sh`
+
 ---
 
-## 🏗️ Criando o Dockerfile do Frontend
+### Passo 4 — Criar Dockerfile do Frontend
 
-Crie o arquivo `frontend/Dockerfile` com **multi-stage build** em 3 estágios:
-
-### Etapas
-
-1. **Stage 1 (deps)**: Instala dependências com `npm ci`
-2. **Stage 2 (builder)**: Compila o Next.js com `npm run build`
-3. **Stage 3 (runner)**: Imagem final apenas com o necessário para produção
-
-### `frontend/Dockerfile`
+Crie `frontend/Dockerfile` com **multi-stage build** (3 estágios):
 
 ```dockerfile
 # =============================================================================
@@ -241,11 +209,13 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 CMD ["node", "server.js"]
 ```
 
+> 💡 **Nota**: O Next.js deve ter `output: 'standalone'` no `next.config.js` para funcionar com este Dockerfile.
+
 ---
 
-## 🐳 Criando o docker-compose.yml
+### Passo 5 — Criar docker-compose.yml
 
-Crie o arquivo `docker-compose.yml` na raiz do projeto:
+Crie `docker-compose.yml` na **raiz do projeto**:
 
 ```yaml
 # =============================================================================
@@ -303,9 +273,33 @@ volumes:
     driver: local
 ```
 
+> 🔑 Substitua `your-dockerhub-username` pelo seu username do Docker Hub.
+
 ---
 
-## 📝 Pipeline do Backend
+### Passo 6 — Configurar Secrets no GitHub
+
+Vá em **Settings → Secrets and variables → Actions** e adicione:
+
+| Secret | Valor | Descrição |
+|--------|-------|-----------|
+| `DOCKERHUB_USERNAME` | seu-usuario-dockerhub | Username do Docker Hub |
+| `DOCKERHUB_TOKEN` | token-de-acesso-do-dockerhub | Access Token do Docker Hub (Settings → Security → Access Tokens) |
+| `SECRET_KEY` | chave-secreta-32-chars | Gere com: `python -c 'import secrets; print(secrets.token_urlsafe(32))'` |
+
+**Como gerar token do Docker Hub:**
+1. Acesse [hub.docker.com](https://hub.docker.com) → Account Settings → Security → New Access Token
+2. Nome: `github-actions-condocombat` → Permissão: `Read & Write`
+3. Copie o token e adicione como `DOCKERHUB_TOKEN`
+
+**Como gerar `SECRET_KEY`:**
+```bash
+python -c 'import secrets; print(secrets.token_urlsafe(32))'
+```
+
+---
+
+### Passo 7 — Criar Pipeline do Backend
 
 Crie o arquivo `.github/workflows/backend.yml`:
 
@@ -402,7 +396,7 @@ jobs:
 
 ---
 
-## 📝 Pipeline do Frontend
+### Passo 8 — Criar Pipeline do Frontend
 
 Crie o arquivo `.github/workflows/frontend.yml`:
 
@@ -499,50 +493,66 @@ jobs:
 
 ---
 
-## 🐳 Rodando o Stack Local com Docker Compose
-
-Depois das pipelines publicarem as imagens no DockerHub, você pode rodar localmente:
-
-### 1. Configure as variáveis de ambiente
+### Passo 9 — Validar Localmente Antes de Subir
 
 ```bash
-# Crie o arquivo .env na raiz do projeto
-cp .env.example .env
-# Edite .env com suas credenciais DockerHub
-```
+# 1. Build local das imagens
+docker compose build
 
-### 2. Atualize o docker-compose.yml
-
-Substitua `your-dockerhub-username` pelo seu usuário real no DockerHub.
-
-### 3. Inicie os serviços
-
-```bash
-# Inicia todos os serviços em background
+# 2. Subir stack completa
 docker compose up -d
 
-# Acompanha os logs
-docker compose logs -f
-
-# Verifica status dos serviços
+# 3. Verificar saúde dos containers
 docker compose ps
-```
+docker compose logs -f api
 
-### 4. Acesse as aplicações
+# 4. Testar endpoints
+curl http://localhost:8000/health    # Backend
+curl http://localhost:3000           # Frontend
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+# 5. Rodar testes do backend localmente
+cd backend && pytest
 
-### 5. Parar os serviços
+# 6. Rodar testes do frontend localmente
+cd frontend && npm test
 
-```bash
-# Para os serviços sem apagar dados
-docker compose down
+# 7. Rodar lint do backend
+cd backend && ruff check app/
 
-# Para os serviços e apaga volume do banco (cuidado!)
+# 8. Rodar lint do frontend
+cd frontend && npm run lint
+
+# 9. Parar e limpar
 docker compose down -v
 ```
+
+---
+
+### Passo 10 — Commit e Push
+
+```bash
+git add .
+git commit -m "feat: add Dockerfiles, docker-compose and GitHub Actions pipelines"
+git push origin main
+```
+
+As pipelines serão disparadas automaticamente. Acompanhe em **Actions** no GitHub.
+
+---
+
+### Passo 11 — Verificar Pipeline e Imagens
+
+Após as pipelines concluírem:
+1. No GitHub: **Actions** → verifique se todos os jobs passaram (lint → test → build-and-push)
+2. No Docker Hub: acesse seu perfil → Repositories → confirme as imagens:
+   - `seu-usuario/condocombat-backend:latest`
+   - `seu-usuario/condocombat-frontend:latest`
+3. Teste o docker-compose com as imagens publicadas:
+   ```bash
+   # Atualize o docker-compose.yml com seu username
+   docker compose pull
+   docker compose up -d
+   ```
 
 ---
 
@@ -571,7 +581,7 @@ docker compose down -v
 
 ---
 
-## 💡 Dicas
+## 💡 Dicas Importantes
 
 1. **Monorepo paths**: Os workflows usam `paths: ['backend/**']` e `paths: ['frontend/**']` para evitar execuções desnecessárias quando só o backend ou frontend mudar.
 

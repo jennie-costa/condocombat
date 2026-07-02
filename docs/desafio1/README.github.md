@@ -2,13 +2,12 @@
 
 ## 🎯 Objetivo
 
-Criar uma pipeline de **Integração Contínua (CI)** e **Deploy Contínuo (CD)** para a **Landing Page** do CondoCombat, um site estático construído com [Astro](https://astro.build) + [TailwindCSS](https://tailwindcss.com).
+Criar uma pipeline de **Integração Contínua (CI)** e **Deploy Contínuo (CD)** para a **Landing Page** do CondoCombat (Astro + TailwindCSS).
 
 A pipeline deve:
-
-1. **Executar testes automatizados** (`vitest`)
-2. **Fazer o build do projeto** (`astro build`)
-3. **Fazer o deploy na Netlify** utilizando a **CLI oficial** da Netlify com token
+1. Executar testes automatizados (`vitest`)
+2. Fazer o build do projeto (`astro build`)
+3. Fazer o deploy na Netlify via **CLI oficial** com token
 
 Pipeline configurada para **GitHub Actions**.
 
@@ -18,14 +17,14 @@ Pipeline configurada para **GitHub Actions**.
 
 ### Landing Page (`landing/`)
 
-| Item            | Detalhe                        |
-|-----------------|--------------------------------|
-| Framework       | Astro 5 + TailwindCSS 3        |
-| Pasta de build  | `dist/`                        |
-| Testes          | Vitest                         |
-| Comando build   | `npm run build` → `astro build`|
-| Comando teste   | `npm test` → `vitest run`      |
-| Porta dev       | `localhost:4321`               |
+| Item | Detalhe |
+|------|---------|
+| Framework | Astro 5 + TailwindCSS 3 |
+| Pasta de build | `dist/` |
+| Testes | Vitest |
+| Comando build | `npm run build` → `astro build` |
+| Comando teste | `npm test` → `vitest run` |
+| Porta dev | `localhost:4321` |
 
 ```bash
 # Instalar dependências
@@ -43,50 +42,22 @@ npm run preview
 
 ---
 
-## 📋 Pré-requisitos
+## ✅ Passo a Passo
+
+### Passo 1 — Pré-requisitos
 
 - [ ] Conta na [Netlify](https://app.netlify.com/signup)
 - [ ] Repositório no [GitHub](https://github.com)
 - [ ] Netlify CLI instalada (opcional, para testes locais):
-
-```bash
-npm install -g netlify-cli
-```
-
----
-
-## 🔐 Variáveis de Ambiente (Secrets)
-
-A pipeline precisa de duas variáveis de ambiente para fazer o deploy. Configure-as como **secrets** no repositório:
-
-| Variável              | Descrição                                      | Onde conseguir                                  |
-|-----------------------|------------------------------------------------|-------------------------------------------------|
-| `NETLIFY_AUTH_TOKEN`  | Token de autenticação da Netlify    | Netlify → User Settings → Personal access tokens |
-| `NETLIFY_SITE_ID`     | ID do site criado na Netlify                   | Netlify → Site settings → General → Site ID      |
-| `NETLIFY_SITE_NAME`   | Nome do site (slug) — usado no deploy via CLI  | Netlify → Site settings → General → Site name    |
-
-### Como gerar o `NETLIFY_AUTH_TOKEN`
-
-1. Acesse [app.netlify.com](https://app.netlify.com)
-2. Vá em **User Settings** (foto do canto superior direito) → **Applications**
-3. Em **Personal access tokens**, clique em **New access token**
-4. Dê um nome (ex: `ci-cd-condocombat`) e copie o token gerado
-5. Adicione como secret no repositório com o nome `NETLIFY_AUTH_TOKEN`
-
-### Como obter o `NETLIFY_SITE_ID`
-
-1. No Netlify, vá em **Sites** → selecione o site criado
-2. Vá em **Site settings** → **General** → **Site details**
-3. Copie o **Site ID** (é um UUID, ex: `12345678-9abc-def0-1234-56789abcdef0`)
-4. Adicione como secret no repositório com o nome `NETLIFY_SITE_ID`
-
-> 💡 **Dica**: Você pode criar o site manualmente pelo dashboard da Netlify ou via CLI com `netlify sites:create`.
+  ```bash
+  npm install -g netlify-cli
+  ```
 
 ---
 
-## 🌐 Configuração `netlify.toml`
+### Passo 2 — Criar arquivo `netlify.toml`
 
-Crie o arquivo `netlify.toml` na raiz da landing page (`landing/netlify.toml`):
+Crie `landing/netlify.toml` na raiz da landing page:
 
 ```toml
 [build]
@@ -102,33 +73,40 @@ Crie o arquivo `netlify.toml` na raiz da landing page (`landing/netlify.toml`):
   status = 200
 ```
 
-> ℹ️ Este arquivo informa à Netlify qual comando executar e qual pasta publicar. Ele é opcional, mas ajuda na consistência entre deploys locais e via pipeline.
+> ℹ️ Informa à Netlify qual comando executar e qual pasta publicar. Ajuda na consistência entre deploys locais e via pipeline.
 
 ---
 
-## 🚀 Deploy com Netlify CLI
+### Passo 3 — Configurar Secrets no GitHub
 
-O deploy é feito com a `netlify-cli` dentro da pipeline:
+Vá em **Settings → Secrets and variables → Actions** e adicione:
 
-```bash
-npm install -g netlify-cli
-netlify deploy --dir=dist --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
-```
+| Secret | Onde conseguir |
+|--------|----------------|
+| `NETLIFY_AUTH_TOKEN` | Netlify → User Settings → Applications → Personal access tokens → New access token |
+| `NETLIFY_SITE_ID` | Netlify → Sites → selecione o site → Site settings → General → Site details → Site ID (UUID) |
+| `NETLIFY_SITE_NAME` | Netlify → Site settings → General → Site name (slug) |
 
-| Flag      | Significado                                        |
-|-----------|----------------------------------------------------|
-| `--dir`   | Diretório com os arquivos do build (`dist`)        |
-| `--prod`  | Deploy direto para produção (sem draft)            |
-| `--auth`  | Token de autenticação                              |
-| `--site`  | ID do site na Netlify                              |
+**Como gerar `NETLIFY_AUTH_TOKEN`:**
+1. Acesse [app.netlify.com](https://app.netlify.com)
+2. User Settings (foto canto superior) → Applications
+3. Personal access tokens → New access token
+4. Nome: `ci-cd-condocombat` → copie o token
+5. Adicione como secret `NETLIFY_AUTH_TOKEN`
+
+**Como obter `NETLIFY_SITE_ID`:**
+1. No Netlify, vá em Sites → selecione o site
+2. Site settings → General → Site details
+3. Copie o **Site ID** (ex: `12345678-9abc-def0-1234-56789abcdef0`)
+4. Adicione como secret `NETLIFY_SITE_ID`
+
+> 💡 Pode criar o site manualmente pelo dashboard ou via CLI: `netlify sites:create`
 
 ---
 
-## 🐙 GitHub Actions
+### Passo 4 — Criar Workflow GitHub Actions
 
-Crie o diretório `.github/workflows/` na **raiz do repositório** (não dentro de `landing/`) e adicione o arquivo:
-
-### `deploy-landing.yml`
+Crie o diretório `.github/workflows/` na **raiz do repositório** (não dentro de `landing/`) e adicione `deploy-landing.yml`:
 
 ```yaml
 name: Deploy Landing Page
@@ -210,19 +188,16 @@ jobs:
             --site=${{ secrets.NETLIFY_SITE_ID }}
 ```
 
-### Explicação
+**Explicação dos jobs:**
 
-| Job   | Responsabilidade                                           |
-|-------|------------------------------------------------------------|
-| `ci`  | Instalar deps → rodar testes → build → salvar artefato     |
-| `cd`  | Baixar artefato do build → instalar CLI → deploy na Netlify |
+| Job | Responsabilidade |
+|-----|------------------|
+| `ci` | Instalar deps → rodar testes → build → salvar artefato |
+| `cd` | Baixar artefato → instalar CLI → deploy na Netlify |
 
 O job `cd` só executa se o `ci` passar (`needs: ci`).
 
-### Gatilhos (`on.push.paths`)
-
-A pipeline é acionada apenas quando há mudanças em:
-
+**Gatilhos (`on.push.paths`):**
 - `landing/**` — qualquer arquivo da landing page
 - `.github/workflows/deploy-landing.yml` — o próprio workflow
 
@@ -230,9 +205,7 @@ Isso evita rodar a pipeline quando outras partes do monorepo (backend, frontend)
 
 ---
 
-## 🧪 Validação local antes de subir
-
-Antes de commitar, teste tudo localmente:
+### Passo 5 — Validar Localmente Antes de Subir
 
 ```bash
 # 1. Testes
@@ -254,15 +227,46 @@ act --job ci --container-architecture linux/amd64
 
 ---
 
+### Passo 6 — Commit e Push
+
+```bash
+git add .
+git commit -m "feat: add CI/CD pipeline for landing page"
+git push origin main
+```
+
+A pipeline será disparada automaticamente. Acompanhe em **Actions** no GitHub.
+
+---
+
+### Passo 7 — Verificar Deploy
+
+Após a pipeline concluir:
+1. Acesse a URL do site: `https://{site-name}.netlify.app`
+2. Confirme que a landing page carrega corretamente
+3. Configure domínio personalizado depois, se desejar (Netlify → Domain settings)
+
+---
+
 ## ✅ Critérios de Avaliação
 
-| Critério                           | Peso | Descrição                                          |
-|------------------------------------|------|----------------------------------------------------|
-| Testes passando na pipeline        | 25%  | `vitest run` executa sem erros                     |
-| Build concluído com sucesso        | 20%  | `astro build` gera a pasta `dist/`                 |
-| Deploy publicado na Netlify        | 30%  | Site acessível via URL pública                     |
-| Pipeline automatizada (CI/CD)      | 15%  | Pipeline roda sozinha no push para `main`          |
-| Organização e clareza do código    | 10%  | YAML limpo, boas práticas, secrets bem configurados|
+| Critério | Peso | Descrição |
+|----------|------|-----------|
+| Testes passando na pipeline | 25% | `vitest run` executa sem erros |
+| Build concluído com sucesso | 20% | `astro build` gera a pasta `dist/` |
+| Deploy publicado na Netlify | 30% | Site acessível via URL pública |
+| Pipeline automatizada (CI/CD) | 15% | Pipeline roda sozinha no push para `main` |
+| Organização e clareza do código | 10% | YAML limpo, boas práticas, secrets bem configurados |
+
+---
+
+## 💡 Dicas Importantes
+
+1. **Monorepo**: O CondoCombat tem `landing/`, `frontend/`, `backend/`. Use `paths` no GitHub Actions para focar apenas na landing.
+2. **Netlify CLI**: Instale como dev dependency (`npm install -D netlify-cli`) para versão fixa no `package.json`.
+3. **Teste em draft primeiro**: Faça deploy sem `--prod` para verificar antes de publicar.
+4. **Logs**: Se falhar, verifique logs da pipeline (GitHub Actions) e da Netlify (Deploys → clicar no deploy com problema).
+5. **URL do site**: Após deploy, disponível em `https://{site-name}.netlify.app`.
 
 ---
 
@@ -273,13 +277,3 @@ act --job ci --container-architecture linux/amd64
 - [act — Execute GitHub Actions localmente](https://github.com/nektos/act)
 - [Astro — Guia de deploy na Netlify](https://docs.astro.build/en/guides/deploy/netlify/)
 - [CondoCombat — Landing Page](../../landing/)
-
----
-
-## 💡 Dicas
-
-1. **Monorepo**: O projeto CondoCombat é um monorepo com `landing/`, `frontend/` e `backend/`. A pipeline deve focar **apenas** na landing page. Use `paths` no GitHub Actions para evitar execuções desnecessárias.
-2. **Netlify CLI**: Instale como dependência de desenvolvimento (`npm install -D netlify-cli`) para ter versão fixa no `package.json`.
-3. **URL do site**: Após o deploy, o site estará disponível em `https://{site-name}.netlify.app`. Você pode configurar domínio personalizado depois.
-4. **Teste em draft primeiro**: Faça o primeiro deploy sem `--prod` para verificar se está tudo certo antes de publicar.
-5. **Logs**: Se o deploy falhar, verifique os logs da pipeline e da Netlify (Netlify → Deploys → clicar no deploy com problema).
